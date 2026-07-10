@@ -1,4 +1,5 @@
 import type { AnalyticsResult } from '@/hooks/useAnalytics'
+import type { DrillAction } from '@/components/ui/info-dot'
 import { ClientOnly } from '@/components/ui/client-only'
 import { Skeleton } from '@/components/ui/skeleton'
 import { DriverDonut } from '@/components/charts/DriverDonut'
@@ -14,7 +15,13 @@ function deltaColor(delta: number): string {
 }
 
 /** Donut + legend table of customer drivers: focus brand vs. category average. */
-export function CustomerDriverOverview({ analytics }: { analytics: AnalyticsResult }) {
+export function CustomerDriverOverview({
+  analytics,
+  drill,
+}: {
+  analytics: AnalyticsResult
+  drill?: DrillAction
+}) {
   const { drivers, driverTotal, filters } = analytics
 
   return (
@@ -22,6 +29,7 @@ export function CustomerDriverOverview({ analytics }: { analytics: AnalyticsResu
       title="Customer Driver Overview"
       info="Share of detected positive customer drivers for the focus brand versus the category average. Driver mix is modelled deterministically from real rating, verification, recommendation and source signals (the shipped cube stores aggregates, not raw text)."
       className="h-full"
+      drill={drill}
       actions={
         <span className="text-[10.5px] font-medium text-ink-faint">
           {filters.brand} vs Category Avg

@@ -2,7 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 import { ArrowDownRight, ArrowUpRight } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { CountUp } from '@/components/ui/count-up'
-import { InfoDot } from '@/components/ui/info-dot'
+import { InfoDot, type DrillAction } from '@/components/ui/info-dot'
 import { cn } from '@/lib/utils'
 
 export type Accent = 'brand' | 'positive' | 'native' | 'warning' | 'external' | 'neutral'
@@ -34,6 +34,7 @@ export function KpiCard({
   delta,
   status,
   info,
+  drill,
   index = 0,
 }: {
   icon: LucideIcon
@@ -46,6 +47,7 @@ export function KpiCard({
   delta?: KpiDelta
   status?: { text: string; tone: Accent }
   info: string
+  drill?: DrillAction
   index?: number
 }) {
   const a = ACCENT[accent]
@@ -69,7 +71,7 @@ export function KpiCard({
               {label}
             </span>
           </div>
-          <InfoDot content={info} />
+          <InfoDot content={info} drill={drill} />
         </div>
 
         <div className="mt-3 flex items-baseline gap-1">

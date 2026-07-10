@@ -37,9 +37,9 @@ export function AiInsightPanel({
         <span className="text-[10px] font-semibold uppercase tracking-wide text-external">AI</span>
       }
       className="h-full"
-      bodyClassName="flex flex-col p-3"
+      bodyClassName="flex min-h-0 flex-col p-3"
     >
-      <div className="flex h-full flex-col justify-between gap-0.5">
+      <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto pr-1">
         {insights.map((it) => (
           <div
             key={it.title}

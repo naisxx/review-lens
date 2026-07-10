@@ -1,9 +1,14 @@
 import type {
   Aggregate,
+  AuthFactor,
+  AuthTrendDatum,
+  AuthenticitySignals,
   BenchmarkMode,
+  BrandAuthRow,
   BrandRow,
   Cell,
   CompetitorDatum,
+  Coverage,
   CubePayload,
   Filters,
   Metrics,
@@ -11,6 +16,8 @@ import type {
   SourceDetailDatum,
   SourceMixDatum,
   TrendDatum,
+  TrustSegment,
+  TrustSegmentKey,
 } from '@/types'
 import { clamp } from './format'
 
@@ -478,6 +485,224 @@ export function peerMetrics(
 ): Metrics {
   const idxs = new Set(competitorIdxs(scoped, focusIdx, competitorCount))
   return deriveMetrics(accumulate(scoped.filter((c) => idxs.has(c.b))))
+}
+
+/* ------------------------------------------------------------------ */
+/*  Authenticity / review-source signals                               */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Source diversity — normalized Shannon entropy of the 5 review-source channels
+ * (0 = every review from one channel, 1 = evenly spread). A review base spread
+ * across channels is harder to seed. Documented heuristic.
+ */
+export function sourceDiversity(agg: Aggregate): number {
+  const total = agg.reviews
+  if (total === 0) return 0
+  let h = 0
+  for (const c of agg.sourceCounts) {
+    if (c > 0) {
+      const p = c / total
+      h -= p * Math.log(p)
+    }
+  }
+  return clamp(h / Math.log(agg.sourceCounts.length), 0, 1)
+}
+
+/**
+ * Sentiment consistency — how closely verified and unverified reviewers agree on
+ * negativity (1 = identical 1–2★ rates, 0 = maximally divergent). Large
+ * divergence is a classic manipulation flag. Exact from cube counts.
+ */
+export function sentimentConsistency(agg: Aggregate): number {
+  if (agg.verified === 0 || agg.unverified === 0) return 1
+  const totalNeg = agg.stars[0] + agg.stars[1]
+  const verifiedNeg = Math.max(0, totalNeg - agg.unverifiedComplaints)
+  const vRate = verifiedNeg / agg.verified
+  const uRate = agg.unverifiedComplaints / agg.unverified
+  return clamp(1 - Math.abs(vRate - uRate), 0, 1)
+}
+
+/**
+ * Distribution health — share of "middle" ratings (2–4★). Genuine review sets
+ * keep a meaningful middle; an all-1★/5★ (empty-middle) shape is a seeding /
+ * brigading flag. Reaches 1 at ≥22% middle. Documented heuristic.
+ */
+export function distributionHealth(agg: Aggregate): number {
+  if (agg.reviews === 0) return 0
+  const middle = agg.stars[1] + agg.stars[2] + agg.stars[3]
+  return clamp(middle / agg.reviews / 0.22, 0, 1)
+}
+
+const TRUST_SEGMENTS: { key: TrustSegmentKey; label: string }[] = [
+  { key: 'verifiedAdvocates', label: 'Verified Advocates' },
+  { key: 'verifiedCritics', label: 'Verified Critics' },
+  { key: 'unverifiedVoices', label: 'Unverified Voices' },
+  { key: 'unverifiedComplaints', label: 'Unverified Complaints' },
+]
+
+/**
+ * Reviewer Trust Mix — an EXACT 4-way partition of all reviews by
+ * verification × sentiment (no reconstruction):
+ *   Verified Critics     = verified 1–2★ = (st1+st2) − uc
+ *   Unverified Complaints = uc
+ *   Verified Advocates    = verified non-negative = v − verifiedCritics
+ *   Unverified Voices     = unverified non-negative = unv − uc
+ */
+export function reviewerTrustMix(agg: Aggregate): TrustSegment[] {
+  const totalNeg = agg.stars[0] + agg.stars[1]
+  const verifiedCritics = Math.max(0, totalNeg - agg.unverifiedComplaints)
+  const unverifiedComplaints = agg.unverifiedComplaints
+  const verifiedAdvocates = Math.max(0, agg.verified - verifiedCritics)
+  const unverifiedVoices = Math.max(0, agg.unverified - unverifiedComplaints)
+  const counts = [verifiedAdvocates, verifiedCritics, unverifiedVoices, unverifiedComplaints]
+  const total = counts.reduce((a, b) => a + b, 0) || 1
+  return TRUST_SEGMENTS.map((s, i) => ({
+    key: s.key,
+    label: s.label,
+    count: counts[i],
+    share: counts[i] / total,
+    index: i,
+  }))
+}
+
+/** Bundled authenticity signals for an aggregate. */
+export function authenticitySignals(agg: Aggregate): AuthenticitySignals {
+  const m = deriveMetrics(agg)
+  return {
+    reviews: agg.reviews,
+    avgRating: m.avgRating,
+    authenticityScore: m.authenticityScore,
+    verifiedRate: m.verifiedRate,
+    firstPartyShare: m.nativeShare,
+    sourceDiversity: sourceDiversity(agg),
+    sentimentConsistency: sentimentConsistency(agg),
+    complaintContainment: 1 - m.unverifiedComplaintRate,
+    distributionHealth: distributionHealth(agg),
+    unverifiedShare: safeDiv(agg.unverified, agg.reviews),
+    recommendRate: m.recommendRate,
+    responseRate: m.responseRate,
+  }
+}
+
+const AUTH_FACTOR_DEFS: {
+  key: string
+  label: string
+  get: (s: AuthenticitySignals) => number
+  heuristic?: boolean
+}[] = [
+  { key: 'verified', label: 'Verified Purchase Rate', get: (s) => s.verifiedRate },
+  { key: 'firstParty', label: 'First-Party (Native) Share', get: (s) => s.firstPartyShare },
+  { key: 'consistency', label: 'Sentiment Consistency', get: (s) => s.sentimentConsistency },
+  { key: 'containment', label: 'Complaint Containment', get: (s) => s.complaintContainment },
+  { key: 'recommend', label: 'Recommendation Rate', get: (s) => s.recommendRate },
+  { key: 'health', label: 'Distribution Health', get: (s) => s.distributionHealth, heuristic: true },
+]
+
+/** Authenticity Breakdown rows: focus factor value vs. category. */
+export function authenticityFactors(
+  focus: AuthenticitySignals,
+  category: AuthenticitySignals,
+): AuthFactor[] {
+  return AUTH_FACTOR_DEFS.map((d) => {
+    const value = d.get(focus)
+    const categoryValue = d.get(category)
+    return {
+      key: d.key,
+      label: d.label,
+      value,
+      categoryValue,
+      delta: value - categoryValue,
+      heuristic: d.heuristic,
+    }
+  })
+}
+
+/** Monthly authenticity score for the focus brand vs. category (chronological). */
+export function authenticityTrend(
+  scoped: Cell[],
+  dict: CubePayload['dict'],
+  brandIdx: number,
+): AuthTrendDatum[] {
+  const brandByMonth = new Map<number, Aggregate>()
+  const catByMonth = new Map<number, Aggregate>()
+  const add = (map: Map<number, Aggregate>, c: Cell) => {
+    let a = map.get(c.m)
+    if (!a) {
+      a = accumulate([])
+      map.set(c.m, a)
+    }
+    addCell(a, c)
+  }
+  for (const c of scoped) {
+    add(catByMonth, c)
+    if (c.b === brandIdx) add(brandByMonth, c)
+  }
+  return [...catByMonth.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([m, catAgg]) => {
+      const brandAgg = brandByMonth.get(m)
+      const mk = dict.months[m]
+      return {
+        month: mk,
+        label: formatMonth(mk),
+        brandScore: brandAgg ? deriveMetrics(brandAgg).authenticityScore : 0,
+        categoryScore: deriveMetrics(catAgg).authenticityScore,
+      }
+    })
+}
+
+/** Per-brand authenticity rows for the top brands plus the focus brand. */
+export function brandAuthRows(
+  scoped: Cell[],
+  dict: CubePayload['dict'],
+  focusBrand: string,
+  limit: number,
+): BrandAuthRow[] {
+  const focusIdx = dict.brands.indexOf(focusBrand)
+  const ranked = rankBrandsByVolume(scoped)
+  const chosen = new Set(ranked.slice(0, limit))
+  if (focusIdx >= 0) chosen.add(focusIdx)
+  const rows: BrandAuthRow[] = [...chosen].map((idx) => {
+    const s = authenticitySignals(accumulate(scoped.filter((c) => c.b === idx)))
+    return {
+      brand: dict.brands[idx],
+      isFocus: idx === focusIdx,
+      score: s.authenticityScore,
+      verifiedRate: s.verifiedRate,
+      firstPartyShare: s.firstPartyShare,
+      sentimentConsistency: s.sentimentConsistency,
+      complaintRate: 1 - s.complaintContainment,
+      avgRating: s.avgRating,
+    }
+  })
+  rows.sort((a, b) => b.score - a.score)
+  return rows
+}
+
+/** Review-evidence breadth for the focus brand within scope. */
+export function coverage(
+  scoped: Cell[],
+  dict: CubePayload['dict'],
+  brandIdx: number,
+): Coverage {
+  const subs = new Set<number>()
+  const regs = new Set<number>()
+  let reviews = 0
+  for (const c of scoped) {
+    if (c.b !== brandIdx) continue
+    reviews += c.n
+    subs.add(c.s)
+    regs.add(c.r)
+  }
+  return {
+    reviews,
+    perSubcategory: subs.size > 0 ? reviews / subs.size : 0,
+    subcatsCovered: subs.size,
+    totalSubcats: dict.subcategories.length,
+    regionsCovered: regs.size,
+    totalRegions: dict.regions.length,
+  }
 }
 
 /** Human-readable label for the active time window. */

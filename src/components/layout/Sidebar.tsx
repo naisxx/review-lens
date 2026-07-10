@@ -1,17 +1,12 @@
-import { useState, type ReactNode } from 'react'
+import { type ReactNode } from 'react'
+import { Link, useRouterState } from '@tanstack/react-router'
 import {
-  Bell,
-  Boxes,
-  FileBarChart,
   LayoutDashboard,
   Layers,
   MapPin,
-  PackageX,
-  PanelsTopLeft,
-  Star,
+  ShieldCheck,
   Store,
   Tag,
-  Target,
   Sparkles,
   RotateCcw,
   type LucideIcon,
@@ -30,19 +25,13 @@ import { cn } from '@/lib/utils'
 interface NavItem {
   label: string
   icon: LucideIcon
-  badge?: number
+  to: string
 }
 
+// Only the two live pages are shown for now.
 const PRIMARY_NAV: NavItem[] = [
-  { label: 'Overview', icon: LayoutDashboard },
-  { label: 'Shelf Share', icon: PanelsTopLeft },
-  { label: 'White Space', icon: Target },
-  { label: 'Assortment', icon: Boxes },
-  { label: 'Pricing', icon: Tag },
-  { label: 'Reviews', icon: Star },
-  { label: 'Stockouts', icon: PackageX },
-  { label: 'Alerts', icon: Bell, badge: 3 },
-  { label: 'Reports', icon: FileBarChart },
+  { label: 'Overview', icon: LayoutDashboard, to: '/' },
+  { label: 'Review Source', icon: ShieldCheck, to: '/review-source' },
 ]
 
 function ScopeField({
@@ -67,16 +56,15 @@ function ScopeField({
 }
 
 export function Sidebar() {
-  const [active, setActive] = useState('Overview')
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
   const { filters, toggleMulti, reset, dict } = useFilters()
 
   const renderItem = (item: NavItem) => {
-    const isActive = active === item.label
+    const isActive = pathname === item.to
     return (
-      <button
+      <Link
         key={item.label}
-        type="button"
-        onClick={() => setActive(item.label)}
+        to={item.to}
         className={cn(
           'group relative flex w-full items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium transition-colors',
           isActive
@@ -94,12 +82,7 @@ export function Sidebar() {
           )}
         />
         <span className="truncate">{item.label}</span>
-        {item.badge !== undefined && (
-          <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-danger/20 px-1 text-[10px] font-semibold text-danger tabular">
-            {item.badge}
-          </span>
-        )}
-      </button>
+      </Link>
     )
   }
 

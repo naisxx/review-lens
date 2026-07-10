@@ -1,4 +1,5 @@
 import { Star, ShieldCheck, TriangleAlert, TrendingUp, PieChart } from 'lucide-react'
+import { useNavigate } from '@tanstack/react-router'
 import type { AnalyticsResult } from '@/hooks/useAnalytics'
 import {
   formatInt,
@@ -14,6 +15,7 @@ const signedPct = (ratio: number) => `${formatSignedPoints(ratio * 100)}%`
 /** The five executive KPIs, each derived from the focus brand's live aggregate. */
 export function ExecutiveKpiStrip({ analytics }: { analytics: AnalyticsResult }) {
   const { focus, category, growthFocus, growthCategory, share } = analytics
+  const navigate = useNavigate()
 
   const negStatus: { text: string; tone: Accent } =
     focus.negativeRate <= category.negativeRate
@@ -58,6 +60,10 @@ export function ExecutiveKpiStrip({ analytics }: { analytics: AnalyticsResult })
           goodWhenUp: true,
         }}
         info="Difference between the average rating of verified-purchase and unverified reviews. A wider positive gap indicates verified buyers rate more favourably."
+        drill={{
+          label: 'See review authenticity & sources',
+          onClick: () => navigate({ to: '/review-source' }),
+        }}
       />
 
       <KpiCard

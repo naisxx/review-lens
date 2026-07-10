@@ -1,4 +1,7 @@
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
+import { HeadContent, Outlet, Scripts, createRootRoute } from '@tanstack/react-router'
+import { getCube } from '@/server/cube.functions'
+import { FilterProvider } from '@/components/providers/FilterProvider'
+import { DashboardShell } from '@/components/layout/DashboardShell'
 
 import '../styles.css'
 
@@ -11,7 +14,7 @@ export const Route = createRootRoute({
       {
         name: 'description',
         content:
-          'Executive review benchmark: brand-vs-competitor rating health, verified vs. unverified behaviour, customer drivers, complaint pressure, review growth and category share.',
+          'Executive review benchmark and review-source authenticity: brand-vs-competitor rating health, verified vs. unverified behaviour, customer drivers, source mix and confidence signals.',
       },
     ],
     links: [
@@ -23,8 +26,23 @@ export const Route = createRootRoute({
       },
     ],
   }),
+  // Cube is loaded once at the root so both pages share it and the filter scope.
+  loader: async () => ({ cube: await getCube() }),
+  staleTime: Infinity,
   shellComponent: RootDocument,
+  component: RootLayout,
 })
+
+function RootLayout() {
+  const { cube } = Route.useLoaderData()
+  return (
+    <FilterProvider payload={cube}>
+      <DashboardShell>
+        <Outlet />
+      </DashboardShell>
+    </FilterProvider>
+  )
+}
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (

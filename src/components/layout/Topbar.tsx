@@ -1,4 +1,5 @@
 import { CalendarRange, Download, Scale, SlidersHorizontal } from 'lucide-react'
+import { useRouterState } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { ComboBox } from '@/components/ui/combobox'
 import { InfoDot } from '@/components/ui/info-dot'
@@ -37,17 +38,32 @@ export function Topbar() {
   const { filters, setFilter, dict } = useFilters()
   const { competitorNames, timeLabel } = useAnalytics()
   const competitors = competitorList(competitorNames)
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const isReviewSource = pathname === '/review-source'
 
   return (
     <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-line bg-surface/60 px-5 py-2.5 backdrop-blur">
       <div className="flex min-w-0 items-center gap-2">
         <h1 className="truncate text-[17px] font-semibold tracking-tight text-ink">
-          <span className="text-brand">{filters.brand}</span> Executive Review Overview
-          {competitors && (
-            <span className="font-medium text-ink-muted"> — vs {competitors}</span>
+          <span className="text-brand">{filters.brand}</span>{' '}
+          {isReviewSource ? (
+            'Authenticity & Review Source Analysis'
+          ) : (
+            <>
+              Executive Review Overview
+              {competitors && (
+                <span className="font-medium text-ink-muted"> — vs {competitors}</span>
+              )}
+            </>
           )}
         </h1>
-        <InfoDot content="Executive benchmark of the focus brand against its top competitors — rating, verified vs. unverified behaviour, complaint pressure, customer drivers, review growth and category share. All metrics are live from the review corpus." />
+        <InfoDot
+          content={
+            isReviewSource
+              ? 'Trust in the signal — authenticity, reviewer mix and source quality behind the focus brand’s reviews. All metrics are live from the review corpus.'
+              : 'Executive benchmark of the focus brand against its top competitors — rating, verified vs. unverified behaviour, complaint pressure, customer drivers, review growth and category share. All metrics are live from the review corpus.'
+          }
+        />
       </div>
 
       <div className="flex shrink-0 flex-wrap items-center gap-2">

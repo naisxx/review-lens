@@ -196,6 +196,80 @@ export interface Growth {
   prior: number
 }
 
+/* ------------------------------------------------------------------ */
+/*  Review-source / authenticity view models                           */
+/* ------------------------------------------------------------------ */
+
+/** Bundled authenticity signals for an aggregate — all cube-derived. */
+export interface AuthenticitySignals {
+  reviews: number
+  avgRating: number
+  authenticityScore: number
+  verifiedRate: number
+  firstPartyShare: number
+  sourceDiversity: number
+  sentimentConsistency: number
+  complaintContainment: number
+  distributionHealth: number
+  unverifiedShare: number
+  recommendRate: number
+  responseRate: number
+}
+
+export type TrustSegmentKey =
+  | 'verifiedAdvocates'
+  | 'verifiedCritics'
+  | 'unverifiedVoices'
+  | 'unverifiedComplaints'
+
+/** One slice of the Reviewer Trust Mix donut (exact partition of reviews). */
+export interface TrustSegment {
+  key: TrustSegmentKey
+  label: string
+  count: number
+  share: number
+  index: number
+}
+
+/** One row of the Authenticity Breakdown (focus factor vs. category). */
+export interface AuthFactor {
+  key: string
+  label: string
+  value: number
+  categoryValue: number
+  delta: number
+  /** true when the factor is a documented heuristic rather than an exact rate. */
+  heuristic?: boolean
+}
+
+export interface AuthTrendDatum {
+  month: string
+  label: string
+  brandScore: number
+  categoryScore: number
+}
+
+export interface BrandAuthRow {
+  brand: string
+  isFocus: boolean
+  score: number
+  verifiedRate: number
+  firstPartyShare: number
+  sentimentConsistency: number
+  complaintRate: number
+  avgRating: number
+}
+
+/** Review evidence breadth for the focus brand within scope. */
+export interface Coverage {
+  reviews: number
+  perSubcategory: number
+  subcatsCovered: number
+  totalSubcats: number
+  regionsCovered: number
+  totalRegions: number
+}
+
 export type InsightTone = 'positive' | 'danger' | 'brand' | 'external' | 'warning'
 
 /** An AI-authored insight card: static copy grounded in a real metric delta. */

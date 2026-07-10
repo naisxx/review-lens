@@ -1,6 +1,6 @@
 import { CalendarRange, MapPin, Layers, Store, Tag, type LucideIcon } from 'lucide-react'
 import { Card } from '@/components/ui/card'
-import type { AnalyticsResult } from '@/hooks/useAnalytics'
+import type { CubePayload, Filters } from '@/types'
 
 function summarize(values: string[], allLabel: string): string {
   if (values.length === 0) return allLabel
@@ -35,8 +35,15 @@ function ScopeCard({
 }
 
 /** Horizontal scope summary — mirrors the reference dashboard's context strip. */
-export function ScopeSummaryRow({ analytics }: { analytics: AnalyticsResult }) {
-  const { dict, filters, timeLabel } = analytics
+export function ScopeSummaryRow({
+  dict,
+  filters,
+  timeLabel,
+}: {
+  dict: CubePayload['dict']
+  filters: Filters
+  timeLabel: string
+}) {
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
       <ScopeCard icon={Store} label="Retailer" value={dict.retailer} />

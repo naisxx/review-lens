@@ -7,9 +7,18 @@
  * shown is genuine and moves with the filters.
  */
 
-import type { AiInsight, DriverDatum, Growth, Metrics } from '@/types'
+import type {
+  AiInsight,
+  AuthenticitySignals,
+  Coverage,
+  DriverDatum,
+  Growth,
+  Metrics,
+  TrustSegment,
+} from '@/types'
 import type { DriverKey } from './theme-detection'
 import {
+  formatInt,
   formatPercent,
   formatSignedPoints,
   formatSignedRating,
@@ -179,4 +188,88 @@ export function buildExecInsights(ctx: InsightContext): AiInsight[] {
 /** Focus-brand review share as a one-line note (real metric). */
 export function shareNote(brand: string, share: number): string {
   return `${brand} accounts for ${formatPercent(share, 1)} of category reviews in scope.`
+}
+
+/* ------------------------------------------------------------------ */
+/*  Review-source / authenticity narrative                             */
+/* ------------------------------------------------------------------ */
+
+export interface AuthInsightContext {
+  brand: string
+  focus: AuthenticitySignals
+  category: AuthenticitySignals
+  coverage: Coverage
+  trustMix: TrustSegment[]
+}
+
+/** Key Takeaways — positive authenticity reads, each grounded in a real delta. */
+export function buildAuthTakeaways(ctx: AuthInsightContext): AiInsight[] {
+  const { brand, focus, category, trustMix } = ctx
+  const advocates = trustMix.find((s) => s.key === 'verifiedAdvocates')?.share ?? 0
+
+  return [
+    {
+      title: 'High verified-purchase base drives authenticity',
+      body: `Most reviews come from confirmed buyers, the strongest trust signal.`,
+      metric: `${formatPercent(focus.verifiedRate, 1)} · ${formatSignedPoints((focus.verifiedRate - category.verifiedRate) * 100)}pp vs cat`,
+      tone: 'positive',
+    },
+    {
+      title: 'Verified & unverified reviewers agree',
+      body: `Consistent sentiment across cohorts — little sign of manipulation.`,
+      metric: `${formatPercent(focus.sentimentConsistency, 1)} consistency`,
+      tone: 'positive',
+    },
+    {
+      title: 'Reviews are overwhelmingly first-party',
+      body: `On-site reviews dominate over harder-to-vet syndicated sources.`,
+      metric: `${formatPercent(focus.firstPartyShare, 1)} native`,
+      tone: 'positive',
+    },
+    {
+      title: 'Rating distribution looks natural',
+      body: `A healthy spread of ratings, not an all-1★/5★ seeded shape.`,
+      metric: `${formatPercent(focus.distributionHealth, 0)} health`,
+      tone: 'positive',
+    },
+    {
+      title: 'Verified advocates lead the reviewer mix',
+      body: `${brand}'s review base skews toward confirmed, positive buyers.`,
+      metric: `${formatPercent(advocates, 1)} of reviewers`,
+      tone: 'positive',
+    },
+  ]
+}
+
+/** Risks to Monitor — real warning signals for the authenticity of the base. */
+export function buildAuthRisks(ctx: AuthInsightContext): AiInsight[] {
+  const { focus, category, trustMix } = ctx
+  const unvComplaints = trustMix.find((s) => s.key === 'unverifiedComplaints')?.count ?? 0
+
+  return [
+    {
+      title: 'Unverified reviews to keep watching',
+      body: `Reviews without a confirmed purchase carry higher manipulation risk — watch for spikes.`,
+      metric: `${formatPercent(focus.unverifiedShare, 1)} unverified · ${formatSignedPoints((focus.unverifiedShare - category.unverifiedShare) * 100)}pp vs cat`,
+      tone: 'danger',
+    },
+    {
+      title: 'Monitor unverified complaint volume',
+      body: `1–2★ reviews from unverified reviewers can signal seeding or off-platform noise.`,
+      metric: `${formatInt(unvComplaints)} reviews`,
+      tone: 'danger',
+    },
+    {
+      title: 'Watch coordinated patterns on launches',
+      body: `New-product spikes are where seeding usually appears — keep fraud safeguards on.`,
+      metric: `${formatPercent(focus.sentimentConsistency, 0)} consistency now`,
+      tone: 'danger',
+    },
+    {
+      title: 'Keep encouraging verified purchases',
+      body: `Sustaining a high verified share is what protects the confidence score.`,
+      metric: `${formatPercent(focus.verifiedRate, 1)} verified`,
+      tone: 'danger',
+    },
+  ]
 }

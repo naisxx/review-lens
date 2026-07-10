@@ -22,7 +22,13 @@ const METRIC_COLS = (cat: Metrics): MetricCol[] => [
   { key: 'negativeRate', label: 'Neg. Rate', ref: () => cat.negativeRate, span: 0.02, higherIsBetter: false, fmt: (v) => formatPercent(v, 1) },
 ]
 
-export function CompetitorBenchmarkTable({ analytics }: { analytics: AnalyticsResult }) {
+export function CompetitorBenchmarkTable({
+  analytics,
+  drill,
+}: {
+  analytics: AnalyticsResult
+  drill?: import('@/components/ui/info-dot').DrillAction
+}) {
   const { competitors, category, filters, competitorNames } = analytics
   const cols = METRIC_COLS(category)
 
@@ -53,6 +59,7 @@ export function CompetitorBenchmarkTable({ analytics }: { analytics: AnalyticsRe
       title={`Competitor Benchmark — ${filters.brand} vs ${list}`}
       info="Focus brand and top competitors across the executive metrics, rendered as a heatmap: each metric cell is tinted green (better than category), amber (near) or red (worse) on the shared scale. All values are live from the corpus."
       className="h-full"
+      drill={drill}
       bodyClassName="flex flex-col p-3"
     >
       <div className="flex-1 overflow-x-auto">

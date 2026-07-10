@@ -1,12 +1,13 @@
 import type { ReactNode } from 'react'
 import { Card } from '@/components/ui/card'
-import { InfoDot } from '@/components/ui/info-dot'
+import { InfoDot, type DrillAction } from '@/components/ui/info-dot'
 import { cn } from '@/lib/utils'
 
 /** Titled panel used for every dashboard module (chart, table, list). */
 export function SectionCard({
   title,
   info,
+  drill,
   actions,
   children,
   className,
@@ -14,6 +15,8 @@ export function SectionCard({
 }: {
   title: string
   info?: string
+  /** When set, the `?` becomes a click-popover with a drill-down action. */
+  drill?: DrillAction
   actions?: ReactNode
   children: ReactNode
   className?: string
@@ -26,7 +29,7 @@ export function SectionCard({
           <h3 className="text-[11px] font-semibold uppercase tracking-[0.09em] text-ink-muted">
             {title}
           </h3>
-          {info && <InfoDot content={info} />}
+          {info && <InfoDot content={info} drill={drill} />}
         </div>
         {actions}
       </div>

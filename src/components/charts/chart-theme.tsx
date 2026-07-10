@@ -30,6 +30,14 @@ export const DRIVER_COLORS = [
   '#c76fa0', // Customer Service
 ] as const
 
+/** Reviewer Trust Mix colors, aligned with `reviewerTrustMix` segment order. */
+export const TRUST_COLORS = [
+  '#4bb47c', // Verified Advocates
+  '#d99a3a', // Verified Critics
+  '#3b9dd6', // Unverified Voices
+  '#dd6070', // Unverified Complaints
+] as const
+
 export const BRAND_TEAL = '#2dd0bd'
 export const POSITIVE = '#4bb47c'
 export const WARNING = '#d99a3a'

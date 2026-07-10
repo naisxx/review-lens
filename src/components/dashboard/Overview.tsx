@@ -1,4 +1,5 @@
 import { SearchX } from 'lucide-react'
+import { useNavigate } from '@tanstack/react-router'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { Card } from '@/components/ui/card'
 import { ScopeSummaryRow } from './ScopeSummaryRow'
@@ -13,11 +14,18 @@ import { ExecutiveInsightsStrip } from './ExecutiveInsightsStrip'
 export function Overview() {
   const analytics = useAnalytics()
   const { filters, dict, hasData } = analytics
+  const navigate = useNavigate()
+
+  // "Drill into the reviews / trust behind these numbers" → Review Source page.
+  const toReviewSource = {
+    label: 'See the reviews & authenticity behind this',
+    onClick: () => navigate({ to: '/review-source' }),
+  }
 
   if (!hasData) {
     return (
       <div className="space-y-4">
-        <ScopeSummaryRow analytics={analytics} />
+        <ScopeSummaryRow dict={analytics.dict} filters={analytics.filters} timeLabel={analytics.timeLabel} />
         <Card className="flex flex-col items-center justify-center gap-3 py-24 text-center">
           <SearchX className="h-8 w-8 text-ink-faint" />
           <div>
@@ -34,14 +42,14 @@ export function Overview() {
 
   return (
     <div className="space-y-3.5">
-      <ScopeSummaryRow analytics={analytics} />
+      <ScopeSummaryRow dict={analytics.dict} filters={analytics.filters} timeLabel={analytics.timeLabel} />
 
       <ExecutiveKpiStrip analytics={analytics} />
 
       {/* Row: customer driver overview · heatmap */}
       <div className="grid grid-cols-12 gap-3.5">
         <div className="col-span-12 lg:col-span-5">
-          <CustomerDriverOverview analytics={analytics} />
+          <CustomerDriverOverview analytics={analytics} drill={toReviewSource} />
         </div>
         <div className="col-span-12 lg:col-span-7">
           <CustomerDriverHeatmap analytics={analytics} />
@@ -72,7 +80,7 @@ export function Overview() {
       </div>
 
       {/* Row: competitor benchmark (full width, heatmap style) */}
-      <CompetitorBenchmarkTable analytics={analytics} />
+      <CompetitorBenchmarkTable analytics={analytics} drill={toReviewSource} />
 
       {/* Bottom: executive insights */}
       <ExecutiveInsightsStrip analytics={analytics} />
