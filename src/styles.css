@@ -1,0 +1,116 @@
+@import "tailwindcss" source("../");
+
+/* ------------------------------------------------------------------ */
+/*  ReviewLens — enterprise data-terminal theme                       */
+/* ------------------------------------------------------------------ */
+
+@theme {
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  /* Surfaces — tinted slate, never pure black */
+  --color-canvas: #0a0d13;
+  --color-surface: #10141c;
+  --color-surface-2: #151a24;
+  --color-surface-3: #1b212d;
+  --color-line: #232a38;
+  --color-line-strong: #303849;
+
+  /* Text */
+  --color-ink: #e8ebf2;
+  --color-ink-muted: #93a0b5;
+  --color-ink-faint: #5f6b80;
+
+  /* Accents — desaturated, enterprise */
+  --color-brand: #2dd0bd;
+  --color-brand-dim: #1c8477;
+  --color-positive: #4bb47c;
+  --color-warning: #d99a3a;
+  --color-danger: #dd6070;
+  --color-native: #3b9dd6;
+  --color-verified: #4bb47c;
+  --color-external: #a78bda;
+  --color-social: #d99a3a;
+  --color-neutral: #6b7688;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "cv02", "cv03", "cv04", "ss01";
+  }
+
+  /* tabular numerals everywhere numbers matter */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+}
+
+/* Refined scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-line-strong);
+  border-radius: 8px;
+  border: 2px solid var(--color-canvas);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3c465a;
+}
+
+/* Subtle grid texture for the canvas — fixed, non-scrolling */
+.canvas-grid {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.014) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.014) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Recharts theming overrides */
+.recharts-cartesian-axis-tick-value {
+  fill: var(--color-ink-faint);
+  font-size: 11px;
+}
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: var(--color-line);
+}
+.recharts-default-tooltip {
+  background-color: var(--color-surface-3) !important;
+  border: 1px solid var(--color-line-strong) !important;
+  border-radius: 8px !important;
+}
