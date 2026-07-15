@@ -1,9 +1,13 @@
+import { useState } from 'react'
 import { SearchX } from 'lucide-react'
 import { useNavigate } from '@tanstack/react-router'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import type { ReasonDriverTarget } from '@/lib/purchase-reasons'
 import { Card } from '@/components/ui/card'
 import { ScopeSummaryRow } from './ScopeSummaryRow'
 import { ExecutiveKpiStrip } from './ExecutiveKpiStrip'
+import { PurchaseReasonMatrix } from './PurchaseReasonMatrix'
+import { ReviewDrilldown } from './ReviewDrilldown'
 import { CustomerDriverOverview } from './CustomerDriverOverview'
 import { CustomerDriverHeatmap } from './CustomerDriverHeatmap'
 import { TopCustomerDrivers } from './TopCustomerDrivers'
@@ -15,6 +19,7 @@ export function Overview() {
   const analytics = useAnalytics()
   const { filters, dict, hasData } = analytics
   const navigate = useNavigate()
+  const [drill, setDrill] = useState<ReasonDriverTarget | null>(null)
 
   // "Drill into the reviews / trust behind these numbers" → Review Source page.
   const toReviewSource = {
@@ -46,7 +51,10 @@ export function Overview() {
 
       <ExecutiveKpiStrip analytics={analytics} />
 
-      {/* Row: customer driver overview · heatmap */}
+      {/* Full-width comparison: why they bought × what they value (drills to reviews) */}
+      <PurchaseReasonMatrix analytics={analytics} onDrill={setDrill} />
+
+      {/* Row: customer driver (what they value) — brand comparison */}
       <div className="grid grid-cols-12 gap-3.5">
         <div className="col-span-12 lg:col-span-5">
           <CustomerDriverOverview analytics={analytics} drill={toReviewSource} />
@@ -96,6 +104,12 @@ export function Overview() {
         <span className="text-line-strong">·</span>
         <span>Benchmark: {analytics.benchmarkLabel}</span>
       </div>
+
+      <ReviewDrilldown
+        target={drill}
+        brand={filters.brand}
+        onClose={() => setDrill(null)}
+      />
     </div>
   )
 }

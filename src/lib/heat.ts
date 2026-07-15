@@ -51,3 +51,32 @@ export function heatNorm(
   const raw = (value - ref) / span
   return clamp(higherIsBetter ? raw : -raw, -1, 1)
 }
+
+/* ------------------------------------------------------------------ */
+/*  Vivid magnitude scale (red → orange → amber → green)               */
+/* ------------------------------------------------------------------ */
+
+// A punchy RdYlGn ramp keyed to a value's magnitude (low = red, high = green),
+// for grids where the cell size itself is the story (e.g. brand × reason share).
+// Use DARK text on these cells — they're bright by design.
+const VALUE_RAMP = [
+  [206, 74, 84], // 0.00 red
+  [216, 126, 60], // 0.25 orange
+  [214, 182, 76], // 0.50 amber / yellow
+  [140, 190, 84], // 0.75 yellow-green
+  [70, 176, 112], // 1.00 green
+]
+
+/** Map `t ∈ [0,1]` to a vivid RdYlGn colour (opaque, lightly seated on surface). */
+export function valueHeat(t: number): string {
+  const n = clamp(t, 0, 1) * (VALUE_RAMP.length - 1)
+  const i = Math.floor(n)
+  const f = n - i
+  const a = VALUE_RAMP[i]
+  const b = VALUE_RAMP[Math.min(i + 1, VALUE_RAMP.length - 1)]
+  const [r, g, bl] = a.map((c, k) => Math.round(lerp(SURFACE[k], lerp(c, b[k], f), 0.92)))
+  return `rgb(${r}, ${g}, ${bl})`
+}
+
+/** Legend swatches for the vivid value scale (low → high), 11 steps. */
+export const VALUE_LEGEND: string[] = Array.from({ length: 11 }, (_, i) => valueHeat(i / 10))

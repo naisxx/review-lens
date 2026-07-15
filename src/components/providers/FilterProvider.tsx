@@ -43,26 +43,33 @@ function reducer(state: Filters, action: Action): Filters {
 
 export function FilterProvider({
   payload,
+  initialBrand,
   children,
 }: {
   payload: CubePayload
+  /** Optional deep-link brand (e.g. from `?brand=`); matched case-insensitively. */
+  initialBrand?: string
   children: ReactNode
 }) {
   const cells = useMemo(() => decodeCells(payload), [payload])
 
-  // Default focus brand = highest-volume brand in the corpus.
+  // Default focus brand = deep-linked `?brand=` if it resolves to a real corpus
+  // brand, else the highest-volume brand.
   const defaultFilters = useMemo<Filters>(() => {
     const vol = new Map<number, number>()
     for (const c of cells) vol.set(c.b, (vol.get(c.b) ?? 0) + c.n)
     const topIdx = [...vol.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 0
+    const linked = initialBrand
+      ? payload.dict.brands.find((b) => b.toLowerCase() === initialBrand.toLowerCase())
+      : undefined
     return {
-      brand: payload.dict.brands[topIdx],
+      brand: linked ?? payload.dict.brands[topIdx],
       subcategories: [],
       regions: [],
       time: 'all',
       benchmark: 'category-average',
     }
-  }, [cells, payload.dict.brands])
+  }, [cells, payload.dict.brands, initialBrand])
 
   const [filters, dispatch] = useReducer(reducer, defaultFilters)
 

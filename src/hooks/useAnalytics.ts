@@ -13,6 +13,11 @@ import {
 } from '@/lib/analytics'
 import { driverHeatmap, driverOverview } from '@/lib/drivers'
 import {
+  purchaseReasonHeatmap,
+  reasonDriverMatrix,
+  purchaseReasonOverview,
+} from '@/lib/purchase-reasons'
+import {
   buildExecInsights,
   buildOpportunities,
   buildThreats,
@@ -53,6 +58,10 @@ export function useAnalytics() {
     const { total: driverTotal, drivers } = driverOverview(scoped, dict, filters.brand)
     const heatmap = driverHeatmap(scoped, dict, filters.brand, compIdxs)
 
+    const purchaseReasons = purchaseReasonOverview(scoped, dict, filters.brand)
+    const reasonMatrix = reasonDriverMatrix(scoped, dict, filters.brand)
+    const reasonCompetitors = purchaseReasonHeatmap(scoped, dict, filters.brand, compIdxs)
+
     const insightCtx: InsightContext = {
       brand: filters.brand,
       competitorNames,
@@ -82,6 +91,9 @@ export function useAnalytics() {
       driverTotal,
       drivers,
       heatmap,
+      purchaseReasons,
+      reasonMatrix,
+      reasonCompetitors,
       topDrivers: topDriverInsights(drivers),
       opportunities: buildOpportunities(insightCtx),
       threats: buildThreats(insightCtx),

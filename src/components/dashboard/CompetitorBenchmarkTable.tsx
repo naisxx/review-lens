@@ -3,6 +3,7 @@ import type { CompetitorDatum, Metrics } from '@/types'
 import { formatCompact, formatPercent, formatRating } from '@/lib/format'
 import { heatColor, heatNorm, HEAT_LEGEND } from '@/lib/heat'
 import { cn } from '@/lib/utils'
+import { BrandLogo } from '@/components/ui/brand-logo'
 import { SectionCard } from './SectionCard'
 
 interface MetricCol {
@@ -87,7 +88,10 @@ export function CompetitorBenchmarkTable({
                       : 'text-ink',
                   )}
                 >
-                  {row.brand}
+                  <span className="flex items-center gap-1.5">
+                    <BrandLogo name={row.brand} />
+                    {row.brand}
+                  </span>
                 </td>
                 <td className="whitespace-nowrap px-2 py-1 text-right tabular text-ink-muted">
                   {formatCompact(row.reviews)}

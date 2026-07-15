@@ -26,6 +26,13 @@ export const Route = createRootRoute({
       },
     ],
   }),
+  // Deep-link support: `?brand=<Brand>` seeds the initial focus brand (used by
+  // the ShelfLens "Open in Review Lens" link). Matched case-insensitively in
+  // FilterProvider; ignored if it isn't a real corpus brand.
+  validateSearch: (search: Record<string, unknown>): { brand?: string } => {
+    const brand = search.brand
+    return typeof brand === 'string' && brand.trim() ? { brand: brand.trim() } : {}
+  },
   // Cube is loaded once at the root so both pages share it and the filter scope.
   loader: async () => ({ cube: await getCube() }),
   staleTime: Infinity,
@@ -35,8 +42,9 @@ export const Route = createRootRoute({
 
 function RootLayout() {
   const { cube } = Route.useLoaderData()
+  const { brand } = Route.useSearch()
   return (
-    <FilterProvider payload={cube}>
+    <FilterProvider payload={cube} initialBrand={brand}>
       <DashboardShell>
         <Outlet />
       </DashboardShell>
