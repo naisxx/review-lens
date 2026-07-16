@@ -35,3 +35,7 @@ Thumbs.db
 # Local AI / tooling config (not shared)
 CLAUDE.local.md
 .claude
+
+# Raw review corpora (source data — aggregated into src/data/cube.json, never committed)
+*.xlsx
+*.xls
