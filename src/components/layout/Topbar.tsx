@@ -1,4 +1,4 @@
-import { CalendarRange, Download, Scale, SlidersHorizontal } from 'lucide-react'
+import { CalendarRange, Download, SlidersHorizontal } from 'lucide-react'
 import { useRouterState } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { ComboBox } from '@/components/ui/combobox'
@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/select'
 import { useFilters } from '@/components/providers/FilterProvider'
 import { useAnalytics } from '@/hooks/useAnalytics'
-import type { BenchmarkMode, TimePreset } from '@/types'
+import type { TimePreset } from '@/types'
 
 const TIME_OPTIONS: { value: TimePreset; label: string }[] = [
   { value: 'all', label: 'All time' },
@@ -20,11 +20,6 @@ const TIME_OPTIONS: { value: TimePreset; label: string }[] = [
   { value: 'l24m', label: 'Last 24 months' },
   { value: 'l36m', label: 'Last 36 months' },
   { value: 'ytd', label: 'Year to date' },
-]
-
-const BENCHMARK_OPTIONS: { value: BenchmarkMode; label: string }[] = [
-  { value: 'category-average', label: 'Category Average' },
-  { value: 'market-leaders', label: 'Market Leaders' },
 ]
 
 /** Builds the "{Brand} Executive Review Overview — vs A, B, C & D" title. */
@@ -93,27 +88,6 @@ export function Topbar() {
               </SelectTrigger>
               <SelectContent>
                 {TIME_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="hidden items-center gap-1.5 xl:flex">
-          <Scale className="h-3.5 w-3.5 text-ink-faint" />
-          <div className="w-[150px]">
-            <Select
-              value={filters.benchmark}
-              onValueChange={(v) => setFilter('benchmark', v as BenchmarkMode)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {BENCHMARK_OPTIONS.map((o) => (
                   <SelectItem key={o.value} value={o.value}>
                     {o.label}
                   </SelectItem>

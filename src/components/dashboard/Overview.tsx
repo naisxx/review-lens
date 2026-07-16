@@ -101,8 +101,6 @@ export function Overview() {
         </span>
         <span className="text-line-strong">·</span>
         <span>{analytics.timeLabel}</span>
-        <span className="text-line-strong">·</span>
-        <span>Benchmark: {analytics.benchmarkLabel}</span>
       </div>
 
       <ReviewDrilldown
