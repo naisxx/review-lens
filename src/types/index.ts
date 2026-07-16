@@ -21,6 +21,10 @@ export interface CubePayload {
     months: string[]
     retailer: string
     category: string
+    /** Shopper-facing category groupings (Bathroom Faucets, Shower, …). */
+    categories: string[]
+    /** For each subcategory index, the index of its category in `categories`. */
+    subcatCat: number[]
   }
   schema: string[]
   /** Each cell is a flat numeric tuple keyed by `schema`. */
@@ -66,6 +70,7 @@ export type TimePreset =
 /** Global filter state. `brand` is the subject ("Brand Focus"). */
 export interface Filters {
   brand: string
+  categories: string[] // empty = all
   subcategories: string[] // empty = all
   regions: string[] // empty = all
   time: TimePreset

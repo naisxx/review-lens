@@ -27,6 +27,59 @@ SOURCES = ["Native (On-site)", "Brand Sites", "External Retail", "Social / Forum
 SOCIAL = {"influenster.com"}
 OTHER = {"felproductinfo.com", "lampsplus.com", "amerock corporation"}
 
+# Roll the granular subcategories up into a handful of shopper-facing categories
+# that line up with the ShelfLens bay categories. Keyword fallback covers any
+# new subcategory the exports add later.
+CATEGORY_ORDER = ["Bathroom Faucets", "Kitchen Faucets", "Shower", "Bathroom Accessories", "Other"]
+CATEGORY_MAP = {
+    "Centerset Bathroom Faucets": "Bathroom Faucets",
+    "Widespread Bathroom Faucets": "Bathroom Faucets",
+    "Single Hole Bathroom Faucets": "Bathroom Faucets",
+    "Wall Mounted Faucets": "Bathroom Faucets",
+    "Vessel Sink Faucets": "Bathroom Faucets",
+    "Roman Tub Faucets": "Bathroom Faucets",
+    "Claw Foot Tub Faucets": "Bathroom Faucets",
+    "Bar Faucets": "Kitchen Faucets",
+    "Pull Down Kitchen Faucets": "Kitchen Faucets",
+    "Standard Kitchen Faucets": "Kitchen Faucets",
+    "Pull Out Kitchen Faucets": "Kitchen Faucets",
+    "Bridge Kitchen Faucets": "Kitchen Faucets",
+    "Pot Fillers": "Kitchen Faucets",
+    "Filtered Water Faucets": "Kitchen Faucets",
+    "Utility Sink Faucets": "Kitchen Faucets",
+    "Shower Faucets": "Shower",
+    "Dual Shower Heads": "Shower",
+    "Handheld Shower Heads": "Shower",
+    "Fixed Shower Heads": "Shower",
+    "Bathtub & Shower Faucet Combos": "Shower",
+    "Shower Arm Extensions": "Shower",
+    "Showerhead Filters": "Shower",
+    "Shower Towers": "Shower",
+    "Shower Head Slide Bars": "Shower",
+    "Shower Hoses": "Shower",
+    "Handheld Shower Mounts": "Shower",
+    "Towel Bars": "Bathroom Accessories",
+    "Towel Hooks": "Bathroom Accessories",
+    "Towel Rings": "Bathroom Accessories",
+    "Bathroom Hardware Sets": "Bathroom Accessories",
+    "Toilet Paper Holders": "Bathroom Accessories",
+}
+
+
+def category_of(subcat):
+    if subcat in CATEGORY_MAP:
+        return CATEGORY_MAP[subcat]
+    s = subcat.lower()
+    if "kitchen" in s or "pot filler" in s:
+        return "Kitchen Faucets"
+    if "shower" in s or "tub" in s:
+        return "Shower"
+    if "faucet" in s:
+        return "Bathroom Faucets"
+    if any(w in s for w in ("towel", "paper holder", "hardware set", "hook", "ring")):
+        return "Bathroom Accessories"
+    return "Other"
+
 
 def classify_source(site):
     """Return the source-channel index 0-4 for a ReviewFromSite value."""
@@ -109,6 +162,11 @@ def build(files, out_path, validate=False):
     subcats = sorted({k[1] for k in cells})
     regions = ["United States", "Canada"]
     months = sorted({k[3] for k in cells})
+    # Category grouping: ordered list of used categories + each subcategory's category index.
+    used_cats = {category_of(s) for s in subcats}
+    categories = [c for c in CATEGORY_ORDER if c in used_cats]
+    cat_i = {c: i for i, c in enumerate(categories)}
+    subcat_cat = [cat_i[category_of(s)] for s in subcats]
     bi = {b: i for i, b in enumerate(brands)}
     si = {s: i for i, s in enumerate(subcats)}
     ri = {r: i for i, r in enumerate(regions)}
@@ -129,6 +187,8 @@ def build(files, out_path, validate=False):
             "sources": SOURCES, "months": months,
             "retailer": "The Home Depot",
             "category": "Kitchen & Bath",
+            "categories": categories,
+            "subcatCat": subcat_cat,
         },
         "schema": ["b", "s", "r", "m", "n", "ss", "st1", "st2", "st3", "st4", "st5",
                    "v", "rec", "resp", "unv", "uc",

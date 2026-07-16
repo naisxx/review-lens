@@ -1,6 +1,7 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useMemo,
   useReducer,
   type ReactNode,
@@ -11,7 +12,7 @@ import type { Cell, CubePayload, Filters } from '@/types'
 interface FilterContextValue {
   filters: Filters
   setFilter: <K extends keyof Filters>(key: K, value: Filters[K]) => void
-  toggleMulti: (key: 'subcategories' | 'regions', value: string) => void
+  toggleMulti: (key: 'categories' | 'subcategories' | 'regions', value: string) => void
   reset: () => void
   dict: CubePayload['dict']
   meta: CubePayload['meta']
@@ -22,7 +23,7 @@ const FilterContext = createContext<FilterContextValue | null>(null)
 
 type Action =
   | { type: 'set'; key: keyof Filters; value: Filters[keyof Filters] }
-  | { type: 'toggle'; key: 'subcategories' | 'regions'; value: string }
+  | { type: 'toggle'; key: 'categories' | 'subcategories' | 'regions'; value: string }
   | { type: 'reset'; value: Filters }
 
 function reducer(state: Filters, action: Action): Filters {
@@ -64,6 +65,7 @@ export function FilterProvider({
       : undefined
     return {
       brand: linked ?? payload.dict.brands[topIdx],
+      categories: [],
       subcategories: [],
       regions: [],
       time: 'all',
@@ -72,6 +74,22 @@ export function FilterProvider({
   }, [cells, payload.dict.brands, initialBrand])
 
   const [filters, dispatch] = useReducer(reducer, defaultFilters)
+
+  // Keep subcategory selections consistent with the chosen categories: if the
+  // category filter changes so a selected subcategory no longer belongs to it,
+  // drop that subcategory (otherwise it would silently zero out the results).
+  useEffect(() => {
+    if (filters.categories.length === 0 || filters.subcategories.length === 0) return
+    const { subcategories, categories, subcatCat } = payload.dict
+    const catSel = new Set(filters.categories)
+    const valid = filters.subcategories.filter((s) => {
+      const si = subcategories.indexOf(s)
+      return si >= 0 && catSel.has(categories[subcatCat[si]])
+    })
+    if (valid.length !== filters.subcategories.length) {
+      dispatch({ type: 'set', key: 'subcategories', value: valid })
+    }
+  }, [filters.categories, filters.subcategories, payload.dict])
 
   const value = useMemo<FilterContextValue>(
     () => ({

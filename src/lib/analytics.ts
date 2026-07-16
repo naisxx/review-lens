@@ -212,6 +212,10 @@ export interface ScopeContext {
  */
 export function scopeCells(ctx: ScopeContext, filters: Filters): Cell[] {
   const { dict } = ctx
+  const catSet =
+    filters.categories.length === 0
+      ? null
+      : new Set(filters.categories.map((c) => dict.categories.indexOf(c)))
   const subSet =
     filters.subcategories.length === 0
       ? null
@@ -224,6 +228,7 @@ export function scopeCells(ctx: ScopeContext, filters: Filters): Cell[] {
 
   return ctx.cells.filter(
     (c) =>
+      (catSet === null || catSet.has(dict.subcatCat[c.s])) &&
       (subSet === null || subSet.has(c.s)) &&
       (regSet === null || regSet.has(c.r)) &&
       (months === null || months.has(c.m)),

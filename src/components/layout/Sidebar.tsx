@@ -59,6 +59,14 @@ export function Sidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const { filters, toggleMulti, reset, dict } = useFilters()
 
+  // When categories are chosen, the subcategory picker only offers subcategories
+  // within them, so the two filters can't contradict each other.
+  const catSel = new Set(filters.categories)
+  const subOptions =
+    filters.categories.length === 0
+      ? dict.subcategories
+      : dict.subcategories.filter((_, i) => catSel.has(dict.categories[dict.subcatCat[i]]))
+
   const renderItem = (item: NavItem) => {
     const isActive = pathname === item.to
     return (
@@ -125,20 +133,19 @@ export function Sidebar() {
         </ScopeField>
 
         <ScopeField icon={Tag} label="Category">
-          <Select value={dict.category} onValueChange={() => undefined}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={dict.category}>{dict.category}</SelectItem>
-            </SelectContent>
-          </Select>
+          <MultiSelect
+            label="Category"
+            options={dict.categories}
+            selected={filters.categories}
+            onToggle={(v) => toggleMulti('categories', v)}
+            allLabel="All categories"
+          />
         </ScopeField>
 
         <ScopeField icon={Layers} label="Subcategory">
           <MultiSelect
             label="Subcategory"
-            options={dict.subcategories}
+            options={subOptions}
             selected={filters.subcategories}
             onToggle={(v) => toggleMulti('subcategories', v)}
             allLabel="All subcategories"
