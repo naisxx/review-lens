@@ -1,4 +1,4 @@
-import { CalendarRange, Download, SlidersHorizontal } from 'lucide-react'
+import { CalendarRange, SlidersHorizontal } from 'lucide-react'
 import { useRouterState } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { ComboBox } from '@/components/ui/combobox'
@@ -102,10 +102,6 @@ export function Topbar() {
           <span className="hidden sm:inline">Filters</span>
         </Button>
         <span className="hidden text-[11px] text-ink-faint 2xl:inline tabular">{timeLabel}</span>
-        <Button size="sm" variant="brand">
-          <Download className="h-3.5 w-3.5" />
-          <span className="hidden md:inline">Export</span>
-        </Button>
       </div>
     </header>
   )
