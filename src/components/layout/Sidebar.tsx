@@ -7,10 +7,13 @@ import {
   ShieldCheck,
   Store,
   Tag,
-  Sparkles,
+  ScanLine,
+  ArrowUpRight,
   RotateCcw,
   type LucideIcon,
 } from 'lucide-react'
+
+const SHELFLENS_URL = 'https://shelflens.dataladder.ai/'
 import { useFilters } from '@/components/providers/FilterProvider'
 import { MultiSelect } from '@/components/ui/multi-select'
 import {
@@ -96,15 +99,39 @@ export function Sidebar() {
 
   return (
     <aside className="flex h-full w-[228px] shrink-0 flex-col border-r border-line bg-surface">
-      {/* Brand mark */}
-      <div className="flex items-center gap-2.5 border-b border-line px-4 py-[13px]">
-        <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-brand-dim/25 ring-1 ring-brand/30">
-          <Sparkles className="h-4 w-4 text-brand" />
-          <span className="absolute inset-0 rounded-lg ring-1 ring-inset ring-white/5" />
+      {/* Data Ladder app switcher */}
+      <div className="border-b border-line px-3 py-3">
+        <div className="mb-2 px-1 text-[9px] font-semibold uppercase tracking-[0.13em] text-ink-faint">
+          Data Ladder Suite
         </div>
-        <div className="leading-none">
-          <div className="text-[14px] font-semibold tracking-tight text-ink">Review Lens</div>
-          <div className="mt-0.5 text-[10px] tracking-wide text-ink-faint">by DataLadder.ai</div>
+        <div className="space-y-1">
+          {/* Review Lens — current app */}
+          <div className="relative flex items-center gap-2.5 rounded-lg bg-surface-3 px-2.5 py-2 ring-1 ring-inset ring-line-strong">
+            <span className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r bg-brand" />
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-brand-dim/25 ring-1 ring-brand/30">
+              <ShieldCheck className="h-4 w-4 text-brand" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[12.5px] font-semibold leading-none text-ink">Review Lens</div>
+              <div className="mt-1 text-[9px] leading-none tracking-wide text-brand">You’re here</div>
+            </div>
+          </div>
+          {/* ShelfLens — switch to the other app */}
+          <a
+            href={SHELFLENS_URL}
+            className="group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
+          >
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-surface-2 ring-1 ring-inset ring-line group-hover:ring-line-strong">
+              <ScanLine className="h-4 w-4 text-ink-faint group-hover:text-ink-muted" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[12.5px] font-medium leading-none">ShelfLens</div>
+              <div className="mt-1 text-[9px] leading-none tracking-wide text-ink-faint">
+                Shelf intelligence
+              </div>
+            </div>
+            <ArrowUpRight className="ml-auto h-3.5 w-3.5 shrink-0 text-ink-faint transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+          </a>
         </div>
       </div>
 
